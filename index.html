@@ -31,10 +31,13 @@
   button { width: 100%; padding: 12px; border: none; border-radius: 8px; font-size: 15px; cursor: pointer; font-weight: bold; }
   .btn-save { background-color: #27ae60; color: white; margin-top: 5px; }
   .btn-save:active { background-color: #2ecc71; }
+  .btn-batch { background-color: #e67e22; color: white; margin-top: 5px; }
+  .btn-batch:active { background-color: #d35400; }
   
   .record-card, .stat-card, .plan-card, .guide-card { background: white; padding: 15px; margin-bottom: 10px; border-radius: 10px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
   .record-card { border-left: 5px solid #bdc3c7; }
   .record-card.success { border-left-color: #e74c3c; }
+  .record-card.batch { border-left-color: #e67e22; }
   .record-date { font-size: 0.8em; color: #7f8c8d; margin-bottom: 4px; }
   .record-title { font-weight: bold; color: #2c3e50; font-size: 1.05em; margin-bottom: 4px; }
   .tag { background: #ecf0f1; color: #34495e; font-size: 0.8em; padding: 2px 6px; border-radius: 4px; display: inline-block; margin-right: 4px; margin-bottom: 4px; }
@@ -54,7 +57,6 @@
   .today-menu-title { font-weight: bold; color: #d35400; font-size: 1.1em; margin-bottom: 6px; }
   .today-menu-body { font-size: 0.9em; line-height: 1.6; color: #2c3e50; }
 
-  /* ガイドタブ専用スタイル */
   .guide-card { border-left: 5px solid #16a085; }
   .guide-header { font-size: 1.15em; font-weight: bold; color: #16a085; border-bottom: 2px solid #ecf0f1; padding-bottom: 6px; margin-bottom: 10px; }
   .guide-item { font-size: 0.9em; line-height: 1.6; color: #34495e; margin-bottom: 8px; }
@@ -62,6 +64,11 @@
 
   .vr-hole-info { background: #2980b9; color: white; padding: 15px; border-radius: 8px; margin-bottom: 15px; }
   .vr-hole-title { font-size: 1.1em; font-weight: bold; display: flex; justify-content: space-between; margin-bottom: 5px; }
+  
+  /* サブモード切り替えボタン */
+  .mode-switch { display: flex; gap: 8px; margin-bottom: 12px; }
+  .mode-btn { flex: 1; padding: 8px; font-size: 13px; font-weight: bold; border: 1px solid #bdc3c7; background: #fff; border-radius: 6px; cursor: pointer; color: #555; }
+  .mode-btn.active { background: #34495e; color: #fff; border-color: #34495e; }
 </style>
 </head>
 <body>
@@ -79,6 +86,14 @@
   
   <!-- 📝 ショット記録タブ -->
   <div id="section-input" class="section active">
+    
+    <!-- 1打記録 vs 連続打ちまとめ記録 切り替え -->
+    <div class="mode-switch">
+      <button class="mode-btn active" id="btnModeSingle" onclick="switchShotMode('single')">🎯 1打ずつ記録</button>
+      <button class="mode-btn" id="btnModeBatch" onclick="switchShotMode('batch')">⚡️ 連続打ちをまとめて記録</button>
+    </div>
+
+    <!-- 1打ずつ記録フォーム -->
     <form id="logForm">
       <div class="form-group"><label>日付:</label><input type="date" id="date" required></div>
       <div class="form-row">
@@ -102,6 +117,7 @@
           <option value="スリークォーター(7割)">スリークォーター(7割)</option>
           <option value="フルスイング">フルスイング</option>
           <option value="右足引きドリル">右足引きドリル</option>
+          <option value="連続打ち">連続打ち</option>
           <option value="低いティーアップ">低いティーアップ</option>
           <option value="ティー/直打ち交互">ティー/直打ち交互</option>
           <option value="直打ち(払い打ち)">直打ち(払い打ち)</option>
@@ -115,6 +131,38 @@
       <div class="form-group"><label>メモ:</label><input type="text" id="memo" placeholder="気づきなど"></div>
       <button type="submit" class="btn-save">1打を記録</button>
     </form>
+
+    <!-- 連続打ちまとめ記録フォーム -->
+    <form id="batchLogForm" style="display:none;">
+      <div class="form-group"><label>日付:</label><input type="date" id="batchDate" required></div>
+      <div class="form-row">
+        <div class="form-group"><label>クラブ:</label>
+          <select id="batchClub">
+            <option value="56度 (DJ-6)">56度 (DJ-6)</option>
+            <option value="50度 (DJ-6)">50度 (DJ-6)</option>
+            <option value="PW (Qi)">PW (Qi)</option>
+            <option value="8I (Qi)">8I (Qi)</option>
+            <option value="5U (Stealth2)">5U (Stealth2)</option>
+            <option value="1W">1W</option>
+          </select>
+        </div>
+        <div class="form-group"><label>振り幅・打ち方:</label>
+          <select id="batchSwing">
+            <option value="連続打ち">連続打ち</option>
+            <option value="8時-4時">8時-4時</option>
+            <option value="9時-3時">9時-3時</option>
+            <option value="低いティーアップ">低いティーアップ</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label>打った総球数:</label><input type="number" id="batchTotalCount" placeholder="例: 20" inputmode="numeric" required></div>
+        <div class="form-group"><label>ナイスショット数:</label><input type="number" id="batchSuccessCount" placeholder="例: 15" inputmode="numeric" required></div>
+      </div>
+      <div class="form-group"><label>メモ:</label><input type="text" id="batchMemo" placeholder="例: 当て感をつかむウォーミングアップ"></div>
+      <button type="submit" class="btn-batch">連続打ちをまとめて保存</button>
+    </form>
+
     <div id="recordsList" style="margin-top: 15px;"></div>
   </div>
 
@@ -175,19 +223,17 @@
     </div>
   </div>
 
-  <!-- 📖 コツ・要点タブ (NEW) -->
+  <!-- 📖 コツ・要点タブ -->
   <div id="section-guide" class="section">
-    <!-- ウェッジ -->
     <div class="guide-card">
       <div class="guide-header">⛳️ ウェッジ (50度 / 56度 DJ-6)</div>
       <div class="guide-item">
         <strong>【ボール位置】</strong> スタンス中央〜ボール半個右足寄り。<br>
         <strong>【体重配分】</strong> 左足6〜7割に固定（バックスイング中もキープ）。<br>
-        <strong>【打ち方】</strong> ハンドファーストに構え、手首をロック。すくい上げず、バンスを地面に滑らせて「低く出してスピンで止める」。左右対称の振り幅（8時-4時 / 9時-3時）を徹底。
+        <strong>【打ち方】</strong> ハンドファーストに構え、手首をロック。すくい上げず、バンスを地面に滑らせて「低く出してスピンで止める」。左右対称の振り幅（8時-4時 / 9時-3時）を徹底。<br>
+        <strong>【連続打ちの活用】</strong> 当て感をつかむウォーミングアップとして8時/9時の連続打ちは非常に効果的。
       </div>
     </div>
-
-    <!-- アイアン -->
     <div class="guide-card">
       <div class="guide-header">🏌️‍♂️ アイアン (8I / PW Qi)</div>
       <div class="guide-item">
@@ -196,8 +242,6 @@
         <strong>【打ち方】</strong> 振りかぶりすぎず、コンパクトなスリークォーター（7割）を徹底。「素振り2回→1球打つ」ルーティンでミート率を最優先。
       </div>
     </div>
-
-    <!-- ユーティリティ -->
     <div class="guide-card">
       <div class="guide-header">🚀 ユーティリティ (5U Stealth2)</div>
       <div class="guide-item">
@@ -206,8 +250,6 @@
         <strong>【打ち方】</strong> 上から打ち込まず、横から「ほうきで床を掃く」ように低く長く払い打つ。重いスチールシャフト（KBS）に任せ、力まず背中の回転でゆったり振る。
       </div>
     </div>
-
-    <!-- ドライバー -->
     <div class="guide-card">
       <div class="guide-header">💣 ドライバー (1W / 60Sシャフト)</div>
       <div class="guide-item">
@@ -240,6 +282,7 @@
 
   <script>
     document.getElementById('date').valueAsDate = new Date();
+    document.getElementById('batchDate').valueAsDate = new Date();
     document.getElementById('putterDate').valueAsDate = new Date();
 
     const ujitawaraHoles = [
@@ -291,7 +334,21 @@
       if(tabName === 'vr') { updateVRHole(); renderVRRecords(); }
     }
 
-    /* データ削除共通処理 */
+    // 1打記録と連続打ち記録のサブ切り替え
+    function switchShotMode(mode) {
+      if (mode === 'single') {
+        document.getElementById('btnModeSingle').classList.add('active');
+        document.getElementById('btnModeBatch').classList.remove('active');
+        document.getElementById('logForm').style.display = 'block';
+        document.getElementById('batchLogForm').style.display = 'none';
+      } else {
+        document.getElementById('btnModeSingle').classList.remove('active');
+        document.getElementById('btnModeBatch').classList.add('active');
+        document.getElementById('logForm').style.display = 'none';
+        document.getElementById('batchLogForm').style.display = 'block';
+      }
+    }
+
     function deleteRecord(timestamp, type) {
       if (!confirm("この記録を削除してもよろしいですか？")) return;
       
@@ -310,28 +367,91 @@
       renderPlan();
     }
 
-    /* ショット記録処理 */
+    /* 1打ずつ記録処理 */
     document.getElementById('logForm').addEventListener('submit', function(e) {
       e.preventDefault();
       const records = JSON.parse(localStorage.getItem('golfLogs')) || [];
       records.push({
-        date: document.getElementById('date').value, club: document.getElementById('club').value, swing: document.getElementById('swing').value,
-        yardage: Number(document.getElementById('yardage').value)||0, impact: document.getElementById('impact').value, direction: document.getElementById('direction').value,
-        isSuccess: document.getElementById('isSuccess').checked?1:0, memo: document.getElementById('memo').value, timestamp: new Date().getTime()
+        date: document.getElementById('date').value, 
+        club: document.getElementById('club').value, 
+        swing: document.getElementById('swing').value,
+        yardage: Number(document.getElementById('yardage').value)||0, 
+        impact: document.getElementById('impact').value, 
+        direction: document.getElementById('direction').value,
+        isSuccess: document.getElementById('isSuccess').checked ? 1 : 0, 
+        totalCount: 1,
+        successCount: document.getElementById('isSuccess').checked ? 1 : 0,
+        isBatch: false,
+        memo: document.getElementById('memo').value, 
+        timestamp: new Date().getTime()
       });
       localStorage.setItem('golfLogs', JSON.stringify(records));
-      document.getElementById('yardage').value = ''; document.getElementById('isSuccess').checked = false; document.getElementById('memo').value = '';
-      document.activeElement.blur(); renderRecords(); renderPlan();
+      document.getElementById('yardage').value = ''; 
+      document.getElementById('isSuccess').checked = false; 
+      document.getElementById('memo').value = '';
+      document.activeElement.blur(); 
+      renderRecords(); 
+      renderPlan();
+    });
+
+    /* 連続打ちまとめて記録処理 */
+    document.getElementById('batchLogForm').addEventListener('submit', function(e) {
+      e.preventDefault();
+      const total = Number(document.getElementById('batchTotalCount').value) || 0;
+      const success = Number(document.getElementById('batchSuccessCount').value) || 0;
+      
+      if (total <= 0) return alert("打った総球数を入力してください");
+      if (success > total) return alert("ナイスショット数は総球数以下で入力してください");
+
+      const records = JSON.parse(localStorage.getItem('golfLogs')) || [];
+      records.push({
+        date: document.getElementById('batchDate').value,
+        club: document.getElementById('batchClub').value,
+        swing: document.getElementById('batchSwing').value,
+        yardage: 0,
+        impact: '連続練習',
+        direction: '連続練習',
+        isSuccess: success > 0 ? 1 : 0,
+        totalCount: total,
+        successCount: success,
+        isBatch: true,
+        memo: document.getElementById('batchMemo').value,
+        timestamp: new Date().getTime()
+      });
+      localStorage.setItem('golfLogs', JSON.stringify(records));
+      document.getElementById('batchTotalCount').value = '';
+      document.getElementById('batchSuccessCount').value = '';
+      document.getElementById('batchMemo').value = '';
+      document.activeElement.blur();
+      renderRecords();
+      renderPlan();
+      alert(`連続打ち ${total}球（成功 ${success}球）を記録しました！`);
     });
 
     function renderRecords() {
       const records = JSON.parse(localStorage.getItem('golfLogs')) || [];
       const list = document.getElementById('recordsList'); list.innerHTML = '';
       records.reverse().slice(0, 15).forEach(r => {
-        list.innerHTML += `<div class="record-card ${r.isSuccess?'success':''}">
-          <button class="btn-delete" onclick="deleteRecord(${r.timestamp}, 'shot')">🗑️</button>
-          <div class="record-date">${r.date}</div><div class="record-title">${r.club} ｜ ${r.swing}</div>
-          ${r.yardage>0?`<div>飛距離: <strong>${r.yardage} y</strong></div>`:''}<div class="tag">${r.impact}</div><div class="tag">${r.direction}</div>${r.memo?`<div style="font-size:0.9em; color:#555; margin-top:5px;">📝 ${r.memo}</div>`:''}</div>`;
+        if (r.isBatch) {
+          const rate = Math.round((r.successCount / r.totalCount) * 100);
+          list.innerHTML += `<div class="record-card batch">
+            <button class="btn-delete" onclick="deleteRecord(${r.timestamp}, 'shot')">🗑️</button>
+            <div class="record-date">${r.date}</div>
+            <div class="record-title">⚡️ ${r.club} ｜ ${r.swing}</div>
+            <div style="margin-top:4px;">打球数: <strong>${r.totalCount}球</strong>（ナイスショット: <strong>${r.successCount}球 / ${rate}%</strong>）</div>
+            ${r.memo ? `<div style="font-size:0.9em; color:#555; margin-top:5px;">📝 ${r.memo}</div>` : ''}
+          </div>`;
+        } else {
+          list.innerHTML += `<div class="record-card ${r.isSuccess ? 'success' : ''}">
+            <button class="btn-delete" onclick="deleteRecord(${r.timestamp}, 'shot')">🗑️</button>
+            <div class="record-date">${r.date}</div>
+            <div class="record-title">${r.club} ｜ ${r.swing}</div>
+            ${r.yardage > 0 ? `<div>飛距離: <strong>${r.yardage} y</strong></div>` : ''}
+            <div class="tag">${r.impact}</div><div class="tag">${r.direction}</div>
+            ${r.isSuccess ? '<span class="tag" style="background:#e74c3c; color:white;">成功</span>' : ''}
+            ${r.memo ? `<div style="font-size:0.9em; color:#555; margin-top:5px;">📝 ${r.memo}</div>` : ''}
+          </div>`;
+        }
       });
     }
 
@@ -405,16 +525,24 @@
       }
       document.getElementById('todayMenuContent').innerHTML = menuHtml;
 
+      // 打球数の集計（単発・まとめ打ち両方を合算）
       const golfLogs = JSON.parse(localStorage.getItem('golfLogs')) || [];
       const putterLogs = JSON.parse(localStorage.getItem('putterLogs')) || [];
       
-      document.getElementById('totalShots').innerText = golfLogs.length;
+      let totalShotBalls = 0;
+      const clubCounts = {};
+      golfLogs.forEach(log => {
+        const count = log.totalCount ? Number(log.totalCount) : 1;
+        totalShotBalls += count;
+        clubCounts[log.club] = (clubCounts[log.club] || 0) + count;
+      });
+
+      document.getElementById('totalShots').innerText = totalShotBalls;
+
       let totalPutterBalls = 0;
       putterLogs.forEach(p => totalPutterBalls += p.balls);
       document.getElementById('totalPutts').innerText = totalPutterBalls;
 
-      const clubCounts = {};
-      golfLogs.forEach(log => { clubCounts[log.club] = (clubCounts[log.club] || 0) + 1; });
       let clubHtml = "";
       for (const [club, count] of Object.entries(clubCounts)) {
         clubHtml += `<div style="display:flex; justify-content:space-between; border-bottom:1px solid #eee; padding:3px 0;"><span>${club}</span><strong>${count} 球</strong></div>`;
@@ -446,11 +574,20 @@
         
         for (const swing in grouped[club]) {
           const swingRecords = grouped[club][swing];
-          const totalCount = swingRecords.length;
-          const successCount = swingRecords.filter(r => r.isSuccess === 1).length;
-          const successRate = Math.round((successCount / totalCount) * 100);
+          
+          let totalCount = 0;
+          let successCount = 0;
+          const yardages = [];
 
-          const yardages = swingRecords.map(r => r.yardage).filter(y => y > 0);
+          swingRecords.forEach(r => {
+            const count = r.totalCount ? Number(r.totalCount) : 1;
+            const succ = r.successCount !== undefined ? Number(r.successCount) : (r.isSuccess ? 1 : 0);
+            totalCount += count;
+            successCount += succ;
+            if (r.yardage && r.yardage > 0) yardages.push(r.yardage);
+          });
+
+          const successRate = totalCount > 0 ? Math.round((successCount / totalCount) * 100) : 0;
           const maxYard = yardages.length > 0 ? Math.max(...yardages) : 0;
           const avgYard = yardages.length > 0 ? Math.round(yardages.reduce((a, b) => a + b, 0) / yardages.length) : 0;
 
@@ -460,7 +597,8 @@
               <div style="text-align: right;">
                 <div>成功率: <span style="font-weight: bold; color: #e74c3c; font-size: 1.2em;">${successRate}%</span></div>
                 <span style="font-size: 0.8em; color: #7f8c8d; display: block; margin-top: 4px;">
-                  AVG ${avgYard}y (MAX ${maxYard}y)<br>記録 ${totalCount}球 / 成功 ${successCount}球
+                  ${avgYard > 0 ? `AVG ${avgYard}y (MAX ${maxYard}y)<br>` : ''}
+                  記録 ${totalCount}球 / 成功 ${successCount}球
                 </span>
               </div>
             </div>
