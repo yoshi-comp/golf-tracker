@@ -10,8 +10,8 @@
   body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; padding: 15px; max-width: 500px; margin: auto; background-color: #f4f7f6; -webkit-tap-highlight-color: transparent; }
   h2 { color: #2c3e50; text-align: center; margin-bottom: 15px; font-size: 1.4em; }
   
-  .tabs { display: flex; flex-wrap: wrap; gap: 5px; margin-bottom: 15px; }
-  .tab-btn { flex: 1 1 30%; padding: 10px 2px; background-color: #bdc3c7; color: white; border: none; border-radius: 8px; font-weight: bold; font-size: 12px; cursor: pointer; transition: 0.2s; text-align: center; }
+  .tabs { display: flex; flex-wrap: wrap; gap: 4px; margin-bottom: 15px; }
+  .tab-btn { flex: 1 1 30%; padding: 10px 2px; background-color: #bdc3c7; color: white; border: none; border-radius: 8px; font-weight: bold; font-size: 11px; cursor: pointer; transition: 0.2s; text-align: center; }
   .tab-btn.active { background-color: #2980b9; }
   
   .section { display: none; }
@@ -32,7 +32,7 @@
   .btn-save { background-color: #27ae60; color: white; margin-top: 5px; }
   .btn-save:active { background-color: #2ecc71; }
   
-  .record-card, .stat-card, .plan-card { background: white; padding: 15px; margin-bottom: 10px; border-radius: 10px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
+  .record-card, .stat-card, .plan-card, .guide-card { background: white; padding: 15px; margin-bottom: 10px; border-radius: 10px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
   .record-card { border-left: 5px solid #bdc3c7; }
   .record-card.success { border-left-color: #e74c3c; }
   .record-date { font-size: 0.8em; color: #7f8c8d; margin-bottom: 4px; }
@@ -54,6 +54,12 @@
   .today-menu-title { font-weight: bold; color: #d35400; font-size: 1.1em; margin-bottom: 6px; }
   .today-menu-body { font-size: 0.9em; line-height: 1.6; color: #2c3e50; }
 
+  /* ガイドタブ専用スタイル */
+  .guide-card { border-left: 5px solid #16a085; }
+  .guide-header { font-size: 1.15em; font-weight: bold; color: #16a085; border-bottom: 2px solid #ecf0f1; padding-bottom: 6px; margin-bottom: 10px; }
+  .guide-item { font-size: 0.9em; line-height: 1.6; color: #34495e; margin-bottom: 8px; }
+  .guide-item strong { color: #2c3e50; }
+
   .vr-hole-info { background: #2980b9; color: white; padding: 15px; border-radius: 8px; margin-bottom: 15px; }
   .vr-hole-title { font-size: 1.1em; font-weight: bold; display: flex; justify-content: space-between; margin-bottom: 5px; }
 </style>
@@ -66,6 +72,7 @@
     <button class="tab-btn active" id="tab-input" onclick="switchTab('input')">📝 ショット</button>
     <button class="tab-btn" id="tab-putter" onclick="switchTab('putter')">🏌️‍♂️ パター</button>
     <button class="tab-btn" id="tab-plan" onclick="switchTab('plan')">📅 計画/進捗</button>
+    <button class="tab-btn" id="tab-guide" onclick="switchTab('guide')">📖 コツ・要点</button>
     <button class="tab-btn" id="tab-stats" onclick="switchTab('stats')">📊 統計</button>
     <button class="tab-btn" id="tab-vr" onclick="switchTab('vr')">⛳️ 仮想</button>
   </div>
@@ -165,6 +172,49 @@
     <div class="plan-card">
       <h3 style="margin-top:0; font-size:1.1em; color:#2c3e50;">クラブ別 打球数</h3>
       <div id="clubShotBreakdown" style="font-size: 0.9em; line-height: 1.8;"></div>
+    </div>
+  </div>
+
+  <!-- 📖 コツ・要点タブ (NEW) -->
+  <div id="section-guide" class="section">
+    <!-- ウェッジ -->
+    <div class="guide-card">
+      <div class="guide-header">⛳️ ウェッジ (50度 / 56度 DJ-6)</div>
+      <div class="guide-item">
+        <strong>【ボール位置】</strong> スタンス中央〜ボール半個右足寄り。<br>
+        <strong>【体重配分】</strong> 左足6〜7割に固定（バックスイング中もキープ）。<br>
+        <strong>【打ち方】</strong> ハンドファーストに構え、手首をロック。すくい上げず、バンスを地面に滑らせて「低く出してスピンで止める」。左右対称の振り幅（8時-4時 / 9時-3時）を徹底。
+      </div>
+    </div>
+
+    <!-- アイアン -->
+    <div class="guide-card">
+      <div class="guide-header">🏌️‍♂️ アイアン (8I / PW Qi)</div>
+      <div class="guide-item">
+        <strong>【ボール位置】</strong> スタンス中央。<br>
+        <strong>【最下点管理】</strong> ボールの1cm先のマットを軽く擦るイメージ（ダウンブロー）。<br>
+        <strong>【打ち方】</strong> 振りかぶりすぎず、コンパクトなスリークォーター（7割）を徹底。「素振り2回→1球打つ」ルーティンでミート率を最優先。
+      </div>
+    </div>
+
+    <!-- ユーティリティ -->
+    <div class="guide-card">
+      <div class="guide-header">🚀 ユーティリティ (5U Stealth2)</div>
+      <div class="guide-item">
+        <strong>【ボール位置】</strong> 中央からボール1個分左足寄り。<br>
+        <strong>【体重配分】</strong> 左右50：50均等。<br>
+        <strong>【打ち方】</strong> 上から打ち込まず、横から「ほうきで床を掃く」ように低く長く払い打つ。重いスチールシャフト（KBS）に任せ、力まず背中の回転でゆったり振る。
+      </div>
+    </div>
+
+    <!-- ドライバー -->
+    <div class="guide-card">
+      <div class="guide-header">💣 ドライバー (1W / 60Sシャフト)</div>
+      <div class="guide-item">
+        <strong>【ボール位置】</strong> 左足かかと内側の線上。ティーの高さはボール半分出るくらい。<br>
+        <strong>【構え】</strong> 背骨をわずかに右に傾けてセット。<br>
+        <strong>【打ち方】</strong> 60Sシャフトの重さに急かされず、トップで「間」を作る7割スイング。右プッシュが出る時は「右足引きドリル（足だけ引いて肩は真っ直ぐ）」でインサイド軌道を確認。
+      </div>
     </div>
   </div>
 
