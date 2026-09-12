@@ -1,0 +1,401 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<title>Golf 100Log Pro</title>
+<style>
+  body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; padding: 15px; max-width: 500px; margin: auto; background-color: #f4f7f6; -webkit-tap-highlight-color: transparent; }
+  h2 { color: #2c3e50; text-align: center; margin-bottom: 15px; font-size: 1.4em; }
+  
+  .tabs { display: flex; flex-wrap: wrap; gap: 5px; margin-bottom: 15px; }
+  .tab-btn { flex: 1 1 30%; padding: 10px 2px; background-color: #bdc3c7; color: white; border: none; border-radius: 8px; font-weight: bold; font-size: 12px; cursor: pointer; transition: 0.2s; text-align: center; }
+  .tab-btn.active { background-color: #2980b9; }
+  
+  .section { display: none; }
+  .section.active { display: block; }
+
+  .form-group { margin-bottom: 12px; }
+  .form-row { display: flex; gap: 10px; }
+  .form-row .form-group { flex: 1; }
+  label { display: block; margin-bottom: 5px; font-weight: bold; color: #34495e; font-size: 0.85em; }
+  input[type="text"], input[type="number"], input[type="date"], select { width: 100%; padding: 10px; border: 1px solid #bdc3c7; border-radius: 8px; box-sizing: border-box; font-size: 15px; }
+  
+  .checkbox-wrapper { display: flex; align-items: center; justify-content: center; background: #fff; border: 2px solid #bdc3c7; border-radius: 8px; padding: 10px; cursor: pointer; margin-bottom: 15px; transition: 0.2s; }
+  .checkbox-wrapper:active { background: #ecf0f1; }
+  .checkbox-wrapper input { width: 20px; height: 20px; margin-right: 10px; accent-color: #e74c3c; }
+  .checkbox-wrapper span { font-weight: bold; color: #2c3e50; font-size: 1em; }
+
+  button { width: 100%; padding: 12px; border: none; border-radius: 8px; font-size: 15px; cursor: pointer; font-weight: bold; }
+  .btn-save { background-color: #27ae60; color: white; margin-top: 5px; }
+  .btn-export { background-color: #34495e; color: white; margin-top: 25px; }
+  
+  .record-card, .stat-card, .plan-card { background: white; padding: 15px; margin-bottom: 10px; border-radius: 10px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
+  .record-card { border-left: 5px solid #bdc3c7; }
+  .record-card.success { border-left-color: #e74c3c; }
+  .record-date { font-size: 0.8em; color: #7f8c8d; margin-bottom: 4px; }
+  .record-title { font-weight: bold; color: #2c3e50; font-size: 1.05em; margin-bottom: 4px; }
+  .tag { background: #ecf0f1; color: #34495e; font-size: 0.8em; padding: 2px 6px; border-radius: 4px; display: inline-block; margin-right: 4px; margin-bottom: 4px; }
+  
+  .plan-card { border-left: 5px solid #f39c12; }
+  .plan-header { display: flex; justify-content: space-between; border-bottom: 2px solid #ecf0f1; padding-bottom: 8px; margin-bottom: 10px; }
+  .plan-title { font-weight: bold; color: #d35400; font-size: 1.1em; }
+  .plan-value { font-size: 1.4em; font-weight: bold; color: #2c3e50; text-align: center; margin: 10px 0; }
+  .plan-label { font-size: 0.8em; color: #7f8c8d; text-align: center; display: block; }
+  .progress-bar-bg { background: #ecf0f1; border-radius: 10px; height: 12px; width: 100%; margin-top: 5px; overflow: hidden; }
+  .progress-bar-fill { background: #f39c12; height: 100%; width: 0%; transition: width 0.5s; }
+
+  .vr-hole-info { background: #2980b9; color: white; padding: 15px; border-radius: 8px; margin-bottom: 15px; }
+  .vr-hole-title { font-size: 1.1em; font-weight: bold; display: flex; justify-content: space-between; margin-bottom: 5px; }
+</style>
+</head>
+<body>
+
+  <h2>⛳️ 100切り Tracker</h2>
+
+  <div class="tabs">
+    <button class="tab-btn active" id="tabInput" onclick="switchTab('input')">📝 ショット</button>
+    <button class="tab-btn" id="tabPutter" onclick="switchTab('putter')">🏌️‍♂️ パター</button>
+    <button class="tab-btn" id="tabPlan" onclick="switchTab('plan')">📅 計画/進捗</button>
+    <button class="tab-btn" id="tabStats" onclick="switchTab('stats')">📊 統計</button>
+    <button class="tab-btn" id="tabVR" onclick="switchTab('vr')">⛳️ 仮想</button>
+  </div>
+  
+  <!-- 📝 ショット記録タブ -->
+  <div id="sectionInput" class="section active">
+    <form id="logForm">
+      <div class="form-group"><label>日付:</label><input type="date" id="date" required></div>
+      <div class="form-row">
+        <div class="form-group"><label>クラブ:</label>
+          <select id="club">
+            <option value="56度 (DJ-6)">56度 (DJ-6)</option>
+            <option value="50度 (DJ-6)">50度 (DJ-6)</option>
+            <option value="PW (Qi)">PW (Qi)</option>
+            <option value="8I (Qi)">8I (Qi)</option>
+            <option value="5U (Stealth2)">5U (Stealth2)</option>
+            <option value="1W">1W</option>
+          </select>
+        </div>
+        <div class="form-group"><label>キャリー(y):</label><input type="number" id="yardage" placeholder="例: 40" inputmode="numeric"></div>
+      </div>
+      <div class="form-group"><label>振り幅・打ち方:</label>
+        <select id="swing">
+          <option value="8時-4時">8時-4時</option><option value="9時-3時">9時-3時</option>
+          <option value="ハーフスイング">ハーフスイング</option><option value="スリークォーター(7割)">スリークォーター(7割)</option>
+          <option value="フルスイング">フルスイング</option><option value="右足引きドリル">右足引きドリル</option>
+        </select>
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label>打点:</label><select id="impact"><option value="クリーン">クリーン</option><option value="ダフリ">ダフリ</option><option value="トップ">トップ</option></select></div>
+        <div class="form-group"><label>方向:</label><select id="direction"><option value="ストレート">ストレート</option><option value="右ミス">右ミス</option><option value="左ミス">左ミス</option></select></div>
+      </div>
+      <label class="checkbox-wrapper"><input type="checkbox" id="isSuccess"><span>🎯 成功判定</span></label>
+      <div class="form-group"><label>メモ:</label><input type="text" id="memo" placeholder="気づきなど"></div>
+      <button type="submit" class="btn-save">1打を記録</button>
+    </form>
+    <div id="recordsList" style="margin-top: 15px;"></div>
+  </div>
+
+  <!-- 🏌️‍♂️ パター練習タブ -->
+  <div id="sectionPutter" class="section">
+    <div class="plan-card" style="border-left-color: #8e44ad;">
+      <h3 style="margin-top:0; color:#2c3e50; font-size: 1.1em;">パター練習記録</h3>
+      <form id="putterForm">
+        <div class="form-group"><label>日付:</label><input type="date" id="putterDate" required></div>
+        <div class="form-group"><label>練習メニュー:</label>
+          <select id="putterMenu">
+            <option value="1.5m 壁ドン連続">1.5m 壁ドン連続</option>
+            <option value="3m ジャストタッチ">3m ジャストタッチ (奥の枠)</option>
+            <option value="その他・ストローク確認">その他・ストローク確認</option>
+          </select>
+        </div>
+        <div class="form-row">
+          <div class="form-group"><label>打った球数:</label><input type="number" id="putterBalls" placeholder="例: 30" inputmode="numeric" required></div>
+          <div class="form-group"><label>成功数 / 連続記録:</label><input type="number" id="putterSuccess" placeholder="例: 10" inputmode="numeric"></div>
+        </div>
+        <div class="form-group"><label>メモ・進捗度合い:</label><input type="text" id="putterMemo" placeholder="例: 目線がズレていたのを修正"></div>
+        <button type="submit" class="btn-save" style="background-color: #8e44ad;">パター記録を保存</button>
+      </form>
+    </div>
+    <div id="putterRecordsList"></div>
+  </div>
+
+  <!-- 📅 練習計画タブ -->
+  <div id="sectionPlan" class="section">
+    <div class="plan-card">
+      <div class="plan-header">
+        <span class="plan-title">コンペ(11/22)までの進捗</span>
+        <span id="currentWeekNum" style="font-weight:bold; color:#7f8c8d;"></span>
+      </div>
+      <div class="plan-label">計画開始: 2026/9/14 〜 完了: 11/21</div>
+      <div class="progress-bar-bg"><div class="progress-bar-fill" id="planProgressBar"></div></div>
+    </div>
+    
+    <div class="form-row">
+      <div class="plan-card" style="flex: 1; padding: 10px;">
+        <span class="plan-label">ショット練習（累計）</span>
+        <div class="plan-value"><span id="totalShots">0</span><span style="font-size:0.5em; color:#7f8c8d;"> 球</span></div>
+      </div>
+      <div class="plan-card" style="flex: 1; padding: 10px; border-left-color: #8e44ad;">
+        <span class="plan-label">パター練習（累計）</span>
+        <div class="plan-value"><span id="totalPutts">0</span><span style="font-size:0.5em; color:#7f8c8d;"> 球</span></div>
+      </div>
+    </div>
+
+    <div class="plan-card">
+      <h3 style="margin-top:0; font-size:1.1em; color:#2c3e50;">クラブ別 打球数</h3>
+      <div id="clubShotBreakdown" style="font-size: 0.9em; line-height: 1.8;"></div>
+    </div>
+  </div>
+
+  <!-- 📊 統計タブ -->
+  <div id="sectionStats" class="section"><div id="statsList"></div></div>
+
+  <!-- ⛳️ 仮想ラウンドタブ -->
+  <div id="sectionVR" class="section">
+    <div class="form-group"><label>宇治田原CC ホール:</label><select id="vrHoleSelect" onchange="updateVRHole()"></select></div>
+    <div class="vr-hole-info" id="vrHoleInfo"></div>
+    <div class="plan-card">
+      <h3 style="margin-top:0; color:#2c3e50; font-size: 1.1em;">ホールの結果</h3>
+      <div class="form-row">
+        <div class="form-group"><label>スコア(打数):</label><input type="number" id="vrScore" inputmode="numeric"></div>
+        <div class="form-group"><label>パット数:</label><input type="number" id="vrPutts" inputmode="numeric"></div>
+      </div>
+      <div class="form-group"><label>メモ:</label><input type="text" id="vrMemo" placeholder="例: 2打目5Uでレイアップ成功"></div>
+      <button onclick="saveVRScore()" class="btn-save">スコアを保存</button>
+    </div>
+    <div id="vrRecordsList"></div>
+  </div>
+
+  <script>
+    document.getElementById('date').valueAsDate = new Date();
+    document.getElementById('putterDate').valueAsDate = new Date();
+
+    const ujitawaraHoles = [
+      { hole: 1, par: 4, dist: 380, desc: "【打ち下ろし】右側がすぐOB。1Wは右プッシュ厳禁。5Uでのティーショットも有効。" },
+      { hole: 2, par: 4, dist: 350, desc: "【打ち上げ】距離感が狂いやすい。セカンドは大きめのクラブ(5U)でコンパクトに。" },
+      { hole: 3, par: 3, dist: 140, desc: "【谷越えショート】力みによるダフリ注意。8Iの7割スイングで確実に谷を越える。" },
+      { hole: 4, par: 5, dist: 490, desc: "【左ドッグレッグ】ショートカットは狙わず、フェアウェイ右サイドへ。3打目勝負。" },
+      { hole: 5, par: 4, dist: 360, desc: "【砲台グリーン】グリーン周りのアプローチが鍵。DJ-6の『9時-3時』で手前から転がす。" },
+      { hole: 6, par: 4, dist: 390, desc: "【距離の長いPar4】無理にパーを狙わない。3オン2パットの『ボギー』で大正解のホール。" },
+      { hole: 7, par: 3, dist: 160, desc: "【やや打ち下ろし】風の影響を受けやすい。5Uで軽く払い打ち、グリーン手前の花道狙い。" },
+      { hole: 8, par: 5, dist: 510, desc: "【S字レイアウト】2打目の方向性が重要。5Uで確実に見える位置へレイアップする。" },
+      { hole: 9, par: 4, dist: 370, desc: "【クラブハウスに向かう打ち上げ】セカンドの距離が残りやすい。ダフリに気をつけて打つ。" },
+      { hole: 10, par: 4, dist: 360, desc: "【フェアウェイが狭い】1Wの右足引きドリルを思い出し、インサイドからゆったり振る。" },
+      { hole: 11, par: 5, dist: 480, desc: "【打ち下ろし】距離は短めだが左右ペナルティあり。5Uを多用して安全に前進。" },
+      { hole: 12, par: 3, dist: 130, desc: "【池越えショート】8Iのフルスイングではなく、リラックスした7割スイングでミート重視。" },
+      { hole: 13, par: 4, dist: 400, desc: "【最難関Par4】距離が長くタフ。最初から5オン(ダブルボギー)設定で気楽に攻める。" },
+      { hole: 14, par: 4, dist: 340, desc: "【右ドッグレッグ】右へのミスは即OB。ティーショットは左サイド狙いを徹底。" },
+      { hole: 15, par: 4, dist: 350, desc: "【フラットなホール】スコアメイクのチャンス。DJ-6の距離感データを信じて寄せる。" },
+      { hole: 16, par: 3, dist: 150, desc: "【打ち上げショート】グリーン面が見えない。キャリーがしっかり出る5Uで高い球を打つ。" },
+      { hole: 17, par: 5, dist: 500, desc: "【ブラインドホール】先が見えないため、刻む勇気が必要。アイアンでフェアウェイを繋ぐ。" },
+      { hole: 18, par: 4, dist: 380, desc: "【池が絡む最終ホール】池の手前に刻むか越えるか。手前に刻み、DJ-6で確実に3オン狙い。" }
+    ];
+
+    function initApp() {
+      const select = document.getElementById('vrHoleSelect');
+      ujitawaraHoles.forEach(h => {
+        const opt = document.createElement('option');
+        opt.value = h.hole; opt.textContent = `Hole ${h.hole} (Par ${h.par})`;
+        select.appendChild(opt);
+      });
+      updateVRHole(); renderRecords(); renderPutterRecords(); renderPlan();
+    }
+
+    function switchTab(tabName) {
+      document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+      document.querySelectorAll('.section').forEach(sec => sec.classList.remove('active'));
+      document.getElementById('tab' + tabName.charAt(0).toUpperCase() + tabName.slice(1)).classList.add('active');
+      document.getElementById('section' + tabName.charAt(0).toUpperCase() + tabName.slice(1)).classList.add('active');
+      
+      if(tabName === 'stats') renderStats();
+      if(tabName === 'plan') renderPlan();
+      if(tabName === 'vr') renderVRRecords();
+    }
+
+    /* ショット記録処理 */
+    document.getElementById('logForm').addEventListener('submit', function(e) {
+      e.preventDefault();
+      const records = JSON.parse(localStorage.getItem('golfLogs')) || [];
+      records.push({
+        date: document.getElementById('date').value, club: document.getElementById('club').value, swing: document.getElementById('swing').value,
+        yardage: Number(document.getElementById('yardage').value)||0, impact: document.getElementById('impact').value, direction: document.getElementById('direction').value,
+        isSuccess: document.getElementById('isSuccess').checked?1:0, memo: document.getElementById('memo').value, timestamp: new Date().getTime()
+      });
+      localStorage.setItem('golfLogs', JSON.stringify(records));
+      document.getElementById('yardage').value = ''; document.getElementById('isSuccess').checked = false; document.getElementById('memo').value = '';
+      document.activeElement.blur(); renderRecords();
+    });
+
+    function renderRecords() {
+      const records = JSON.parse(localStorage.getItem('golfLogs')) || [];
+      const list = document.getElementById('recordsList'); list.innerHTML = '';
+      records.reverse().slice(0, 15).forEach(r => {
+        list.innerHTML += `<div class="record-card ${r.isSuccess?'success':''}"><div class="record-date">${r.date}</div><div class="record-title">${r.club} ｜ ${r.swing}</div>
+        ${r.yardage>0?`<div>飛距離: <strong>${r.yardage} y</strong></div>`:''}<div class="tag">${r.impact}</div><div class="tag">${r.direction}</div>${r.memo?`<div style="font-size:0.9em; color:#555; margin-top:5px;">📝 ${r.memo}</div>`:''}</div>`;
+      });
+    }
+
+    /* パター記録処理 */
+    document.getElementById('putterForm').addEventListener('submit', function(e) {
+      e.preventDefault();
+      const putterLogs = JSON.parse(localStorage.getItem('putterLogs')) || [];
+      putterLogs.push({
+        date: document.getElementById('putterDate').value, menu: document.getElementById('putterMenu').value, 
+        balls: Number(document.getElementById('putterBalls').value)||0, success: Number(document.getElementById('putterSuccess').value)||0, 
+        memo: document.getElementById('putterMemo').value, timestamp: new Date().getTime()
+      });
+      localStorage.setItem('putterLogs', JSON.stringify(putterLogs));
+      document.getElementById('putterBalls').value = ''; document.getElementById('putterSuccess').value = ''; document.getElementById('putterMemo').value = '';
+      document.activeElement.blur(); renderPutterRecords();
+    });
+
+    function renderPutterRecords() {
+      const logs = JSON.parse(localStorage.getItem('putterLogs')) || [];
+      const list = document.getElementById('putterRecordsList'); list.innerHTML = '';
+      logs.reverse().slice(0, 15).forEach(r => {
+        list.innerHTML += `<div class="record-card" style="border-left-color:#8e44ad;"><div class="record-date">${r.date}</div><div class="record-title">${r.menu}</div>
+        <div>打球数: <strong>${r.balls}</strong> 球 (成功/連続: ${r.success})</div>${r.memo?`<div style="font-size:0.9em; color:#555; margin-top:5px;">📝 ${r.memo}</div>`:''}</div>`;
+      });
+    }
+
+    /* 練習計画・進捗処理 */
+    function renderPlan() {
+      const startDate = new Date('2026-09-14').getTime();
+      const today = new Date().getTime();
+      let weekNum = Math.floor((today - startDate) / (7 * 24 * 60 * 60 * 1000)) + 1;
+      
+      let weekText = "";
+      let progressPercent = 0;
+      if (weekNum < 1) { weekText = "計画開始前"; progressPercent = 0; }
+      else if (weekNum > 10) { weekText = "コンペ完了！"; progressPercent = 100; }
+      else { weekText = `現在 第 ${weekNum} 週目`; progressPercent = (weekNum / 10) * 100; }
+      
+      document.getElementById('currentWeekNum').innerText = weekText;
+      document.getElementById('planProgressBar').style.width = progressPercent + "%";
+
+      const golfLogs = JSON.parse(localStorage.getItem('golfLogs')) || [];
+      const putterLogs = JSON.parse(localStorage.getItem('putterLogs')) || [];
+      
+      document.getElementById('totalShots').innerText = golfLogs.length;
+      
+      let totalPutterBalls = 0;
+      putterLogs.forEach(p => totalPutterBalls += p.balls);
+      document.getElementById('totalPutts').innerText = totalPutterBalls;
+
+      const clubCounts = {};
+      golfLogs.forEach(log => { clubCounts[log.club] = (clubCounts[log.club] || 0) + 1; });
+      let clubHtml = "";
+      for (const [club, count] of Object.entries(clubCounts)) {
+        clubHtml += `<div style="display:flex; justify-content:space-between; border-bottom:1px solid #eee;"><span>${club}</span><strong>${count} 球</strong></div>`;
+      }
+      document.getElementById('clubShotBreakdown').innerHTML = clubHtml || "<span style='color:#999'>データなし</span>";
+    }
+
+    /* 統計タブ処理 (復元部分) */
+    function renderStats() {
+      const records = JSON.parse(localStorage.getItem('golfLogs')) || [];
+      const statsList = document.getElementById('statsList');
+      
+      if (records.length === 0) {
+        statsList.innerHTML = '<p style="text-align:center; color:#7f8c8d;">データがありません。ショットを記録してください。</p>';
+        return;
+      }
+
+      const grouped = {};
+      records.forEach(r => {
+        if (!grouped[r.club]) grouped[r.club] = {};
+        if (!grouped[r.club][r.swing]) grouped[r.club][r.swing] = [];
+        grouped[r.club][r.swing].push(r);
+      });
+
+      statsList.innerHTML = '';
+
+      for (const club in grouped) {
+        const div = document.createElement('div');
+        div.className = 'stat-card';
+        div.style.borderLeftColor = '#27ae60';
+        let html = `<div style="font-size: 1.2em; font-weight: bold; color: #2c3e50; border-bottom: 2px solid #ecf0f1; padding-bottom: 8px; margin-bottom: 12px;">${club}</div>`;
+        
+        for (const swing in grouped[club]) {
+          const swingRecords = grouped[club][swing];
+          const totalCount = swingRecords.length;
+          
+          const successCount = swingRecords.filter(r => r.isSuccess === 1).length;
+          const successRate = Math.round((successCount / totalCount) * 100);
+
+          const yardages = swingRecords.map(r => r.yardage).filter(y => y > 0);
+          const maxYard = yardages.length > 0 ? Math.max(...yardages) : 0;
+          const avgYard = yardages.length > 0 ? Math.round(yardages.reduce((a, b) => a + b, 0) / yardages.length) : 0;
+
+          html += `
+            <div style="display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px dashed #ecf0f1; font-size: 0.95em; align-items: center;">
+              <span style="color: #34495e; font-weight: bold;">${swing}</span>
+              <div style="text-align: right;">
+                <div>成功率: <span style="font-weight: bold; color: #e74c3c; font-size: 1.2em;">${successRate}%</span></div>
+                <span style="font-size: 0.8em; color: #7f8c8d; display: block; margin-top: 4px;">
+                  AVG ${avgYard}y (MAX ${maxYard}y)<br>記録 ${totalCount}球 / 成功 ${successCount}球
+                </span>
+              </div>
+            </div>
+          `;
+        }
+        div.innerHTML = html;
+        statsList.appendChild(div);
+      }
+    }
+
+    /* 仮想ラウンド(VR)処理 (復元部分) */
+    function updateVRHole() {
+      const holeData = ujitawaraHoles.find(h => h.hole == document.getElementById('vrHoleSelect').value);
+      if(holeData) document.getElementById('vrHoleInfo').innerHTML = `<div class="vr-hole-title"><span>Hole ${holeData.hole}</span><span>Par ${holeData.par} / ${holeData.dist}y</span></div><div style="font-size:0.9em; margin-top:5px;">💡 攻略メモ: ${holeData.desc}</div>`;
+    }
+
+    function saveVRScore() {
+      const score = document.getElementById('vrScore').value;
+      const putts = document.getElementById('vrPutts').value;
+      if(!score) return alert("スコアを入力してください");
+      
+      const holeNum = parseInt(document.getElementById('vrHoleSelect').value);
+      const holeData = ujitawaraHoles.find(h => h.hole === holeNum);
+      const diff = score - holeData.par;
+      let scoreStr = diff === 0 ? 'Par' : diff > 0 ? `+${diff}` : diff;
+
+      const vrRecord = {
+        date: new Date().toLocaleDateString('ja-JP'),
+        hole: holeNum, par: holeData.par, score: parseInt(score), putts: parseInt(putts) || 0,
+        result: scoreStr, memo: document.getElementById('vrMemo').value, timestamp: new Date().getTime()
+      };
+
+      const vrLogs = JSON.parse(localStorage.getItem('vrLogs')) || [];
+      vrLogs.push(vrRecord);
+      localStorage.setItem('vrLogs', JSON.stringify(vrLogs));
+
+      document.getElementById('vrScore').value = ''; document.getElementById('vrPutts').value = ''; document.getElementById('vrMemo').value = '';
+      document.activeElement.blur();
+      renderVRRecords();
+    }
+
+    function renderVRRecords() {
+      const vrLogs = JSON.parse(localStorage.getItem('vrLogs')) || [];
+      const list = document.getElementById('vrRecordsList');
+      list.innerHTML = '';
+      vrLogs.reverse().slice(0, 15).forEach(r => {
+        const div = document.createElement('div');
+        div.className = 'record-card';
+        div.innerHTML = `
+          <div class="record-date">${r.date}</div>
+          <div class="record-title">Hole ${r.hole} (Par ${r.par}) ｜ スコア: ${r.score} <span class="tag" style="background:#e74c3c; color:white;">${r.result}</span></div>
+          <div style="margin-top: 5px; font-size: 0.9em;">パット数: <strong>${r.putts}</strong></div>
+          ${r.memo ? `<div style="margin-top: 5px; color: #555; font-size: 0.9em;">📝 ${r.memo}</div>` : ''}
+        `;
+        list.appendChild(div);
+      });
+    }
+
+    initApp();
+  </script>
+</body>
+</html>
