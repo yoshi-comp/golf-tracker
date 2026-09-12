@@ -31,7 +31,6 @@
   button { width: 100%; padding: 12px; border: none; border-radius: 8px; font-size: 15px; cursor: pointer; font-weight: bold; }
   .btn-save { background-color: #27ae60; color: white; margin-top: 5px; }
   .btn-save:active { background-color: #2ecc71; }
-  .btn-export { background-color: #34495e; color: white; margin-top: 25px; }
   
   .record-card, .stat-card, .plan-card { background: white; padding: 15px; margin-bottom: 10px; border-radius: 10px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
   .record-card { border-left: 5px solid #bdc3c7; }
@@ -40,6 +39,9 @@
   .record-title { font-weight: bold; color: #2c3e50; font-size: 1.05em; margin-bottom: 4px; }
   .tag { background: #ecf0f1; color: #34495e; font-size: 0.8em; padding: 2px 6px; border-radius: 4px; display: inline-block; margin-right: 4px; margin-bottom: 4px; }
   
+  .btn-delete { float: right; width: auto; padding: 5px; background: none; border: none; font-size: 1.2em; cursor: pointer; margin-left: 10px; opacity: 0.7; }
+  .btn-delete:active { opacity: 1; transform: scale(0.9); }
+
   .plan-card { border-left: 5px solid #f39c12; }
   .plan-header { display: flex; justify-content: space-between; border-bottom: 2px solid #ecf0f1; padding-bottom: 8px; margin-bottom: 10px; }
   .plan-title { font-weight: bold; color: #d35400; font-size: 1.1em; }
@@ -48,7 +50,6 @@
   .progress-bar-bg { background: #ecf0f1; border-radius: 10px; height: 12px; width: 100%; margin-top: 5px; overflow: hidden; }
   .progress-bar-fill { background: #f39c12; height: 100%; width: 0%; transition: width 0.5s; }
 
-  /* 今日のおすすめメニュー用ハイライトスタイル */
   .today-menu-card { background: #fff8e7; border-left: 5px solid #e67e22; padding: 15px; border-radius: 10px; margin-bottom: 12px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
   .today-menu-title { font-weight: bold; color: #d35400; font-size: 1.1em; margin-bottom: 6px; }
   .today-menu-body { font-size: 0.9em; line-height: 1.6; color: #2c3e50; }
@@ -88,9 +89,15 @@
       </div>
       <div class="form-group"><label>振り幅・打ち方:</label>
         <select id="swing">
-          <option value="8時-4時">8時-4時</option><option value="9時-3時">9時-3時</option>
-          <option value="ハーフスイング">ハーフスイング</option><option value="スリークォーター(7割)">スリークォーター(7割)</option>
-          <option value="フルスイング">フルスイング</option><option value="右足引きドリル">右足引きドリル</option>
+          <option value="8時-4時">8時-4時</option>
+          <option value="9時-3時">9時-3時</option>
+          <option value="ハーフスイング">ハーフスイング</option>
+          <option value="スリークォーター(7割)">スリークォーター(7割)</option>
+          <option value="フルスイング">フルスイング</option>
+          <option value="右足引きドリル">右足引きドリル</option>
+          <option value="低いティーアップ">低いティーアップ</option>
+          <option value="ティー/直打ち交互">ティー/直打ち交互</option>
+          <option value="直打ち(払い打ち)">直打ち(払い打ち)</option>
         </select>
       </div>
       <div class="form-row">
@@ -130,7 +137,6 @@
 
   <!-- 📅 練習計画・進捗タブ -->
   <div id="section-plan" class="section">
-    <!-- 今日のおすすめメニュー表示 -->
     <div class="today-menu-card" id="todayMenuBox">
       <div class="today-menu-title" id="todayMenuTitle">今日の練習メニュー</div>
       <div class="today-menu-body" id="todayMenuContent">読み込み中...</div>
@@ -221,7 +227,6 @@
       renderPlan();
     }
 
-    // タブ切り替え（IDをハイフン形式に統一してバグ修正）
     function switchTab(tabName) {
       document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
       document.querySelectorAll('.section').forEach(sec => sec.classList.remove('active'));
@@ -236,6 +241,25 @@
       if(tabName === 'vr') { updateVRHole(); renderVRRecords(); }
     }
 
+    /* データ削除共通処理 */
+    function deleteRecord(timestamp, type) {
+      if (!confirm("この記録を削除してもよろしいですか？")) return;
+      
+      let storageKey = '';
+      if (type === 'shot') storageKey = 'golfLogs';
+      if (type === 'putter') storageKey = 'putterLogs';
+      if (type === 'vr') storageKey = 'vrLogs';
+
+      let logs = JSON.parse(localStorage.getItem(storageKey)) || [];
+      logs = logs.filter(r => r.timestamp !== timestamp);
+      localStorage.setItem(storageKey, JSON.stringify(logs));
+
+      if (type === 'shot') renderRecords();
+      if (type === 'putter') renderPutterRecords();
+      if (type === 'vr') renderVRRecords();
+      renderPlan();
+    }
+
     /* ショット記録処理 */
     document.getElementById('logForm').addEventListener('submit', function(e) {
       e.preventDefault();
@@ -247,15 +271,17 @@
       });
       localStorage.setItem('golfLogs', JSON.stringify(records));
       document.getElementById('yardage').value = ''; document.getElementById('isSuccess').checked = false; document.getElementById('memo').value = '';
-      document.activeElement.blur(); renderRecords();
+      document.activeElement.blur(); renderRecords(); renderPlan();
     });
 
     function renderRecords() {
       const records = JSON.parse(localStorage.getItem('golfLogs')) || [];
       const list = document.getElementById('recordsList'); list.innerHTML = '';
       records.reverse().slice(0, 15).forEach(r => {
-        list.innerHTML += `<div class="record-card ${r.isSuccess?'success':''}"><div class="record-date">${r.date}</div><div class="record-title">${r.club} ｜ ${r.swing}</div>
-        ${r.yardage>0?`<div>飛距離: <strong>${r.yardage} y</strong></div>`:''}<div class="tag">${r.impact}</div><div class="tag">${r.direction}</div>${r.memo?`<div style="font-size:0.9em; color:#555; margin-top:5px;">📝 ${r.memo}</div>`:''}</div>`;
+        list.innerHTML += `<div class="record-card ${r.isSuccess?'success':''}">
+          <button class="btn-delete" onclick="deleteRecord(${r.timestamp}, 'shot')">🗑️</button>
+          <div class="record-date">${r.date}</div><div class="record-title">${r.club} ｜ ${r.swing}</div>
+          ${r.yardage>0?`<div>飛距離: <strong>${r.yardage} y</strong></div>`:''}<div class="tag">${r.impact}</div><div class="tag">${r.direction}</div>${r.memo?`<div style="font-size:0.9em; color:#555; margin-top:5px;">📝 ${r.memo}</div>`:''}</div>`;
       });
     }
 
@@ -270,19 +296,21 @@
       });
       localStorage.setItem('putterLogs', JSON.stringify(putterLogs));
       document.getElementById('putterBalls').value = ''; document.getElementById('putterSuccess').value = ''; document.getElementById('putterMemo').value = '';
-      document.activeElement.blur(); renderPutterRecords();
+      document.activeElement.blur(); renderPutterRecords(); renderPlan();
     });
 
     function renderPutterRecords() {
       const logs = JSON.parse(localStorage.getItem('putterLogs')) || [];
       const list = document.getElementById('putterRecordsList'); list.innerHTML = '';
       logs.reverse().slice(0, 15).forEach(r => {
-        list.innerHTML += `<div class="record-card" style="border-left-color:#8e44ad;"><div class="record-date">${r.date}</div><div class="record-title">${r.menu}</div>
-        <div>打球数: <strong>${r.balls}</strong> 球 (成功/連続: ${r.success})</div>${r.memo?`<div style="font-size:0.9em; color:#555; margin-top:5px;">📝 ${r.memo}</div>`:''}</div>`;
+        list.innerHTML += `<div class="record-card" style="border-left-color:#8e44ad;">
+          <button class="btn-delete" onclick="deleteRecord(${r.timestamp}, 'putter')">🗑️</button>
+          <div class="record-date">${r.date}</div><div class="record-title">${r.menu}</div>
+          <div>打球数: <strong>${r.balls}</strong> 球 (成功/連続: ${r.success})</div>${r.memo?`<div style="font-size:0.9em; color:#555; margin-top:5px;">📝 ${r.memo}</div>`:''}</div>`;
       });
     }
 
-    /* 練習計画・進捗処理（今日のメニュー自動生成ロジック追加） */
+    /* 練習計画・進捗処理 */
     function renderPlan() {
       const startDate = new Date('2026-09-14').getTime();
       const today = new Date();
@@ -297,14 +325,12 @@
       document.getElementById('currentWeekNum').innerText = weekText;
       document.getElementById('planProgressBar').style.width = progressPercent + "%";
 
-      // 今日の曜日によるメニュー生成 (0:日, 4:木, 6:土)
       const dayOfWeek = today.getDay();
       const dayNames = ["日曜日", "月曜日", "火曜日", "水曜日", "木曜日", "金曜日", "土曜日"];
       document.getElementById('todayMenuTitle').innerText = `🎯 本日の推奨メニュー (${dayNames[dayOfWeek]})`;
       
       let menuHtml = "";
       if (dayOfWeek === 4) {
-        // 木曜日：打ち放題 DAY 1
         menuHtml = `
           <strong>【練習場 DAY 1：距離感と最下点管理】（約70分/70球）</strong><br>
           1. <strong>DJ-6 (50度/56度)</strong>：8時/9時のキャリー計測（各15球・計30球）。左足体重キープ。<br>
@@ -313,7 +339,6 @@
           ※打つたびに後ろへ下がり、アプリに記録しましょう。
         `;
       } else if (dayOfWeek === 6 || dayOfWeek === 0) {
-        // 土日：打ち放題 DAY 2
         menuHtml = `
           <strong>【練習場 DAY 2：実戦・仮想ラウンド】（約70分/70球）</strong><br>
           1. <strong>1W (ドライバー)</strong>：右足引きドリル5球＋ゆったり7割スイング10球。<br>
@@ -321,7 +346,6 @@
           3. <strong>仮想ラウンド（宇治田原CC）</strong>：仮想タブのホールを見ながら、1W→5U→DJ-6と1球ごとにクラブを持ち替えて打つ（30球）。
         `;
       } else {
-        // 平日（月・火・水・金）：自宅パター
         menuHtml = `
           <strong>【自宅パターマット練習】（毎日5分）</strong><br>
           ・<strong>1.5m 壁ドン練習</strong>：SUPER-BENTの真ん中から「丸い穴」へ強めにカコン！と当てる。<br>
@@ -331,7 +355,6 @@
       }
       document.getElementById('todayMenuContent').innerHTML = menuHtml;
 
-      // 打球数の集計
       const golfLogs = JSON.parse(localStorage.getItem('golfLogs')) || [];
       const putterLogs = JSON.parse(localStorage.getItem('putterLogs')) || [];
       
@@ -340,7 +363,6 @@
       putterLogs.forEach(p => totalPutterBalls += p.balls);
       document.getElementById('totalPutts').innerText = totalPutterBalls;
 
-      // クラブ別集計
       const clubCounts = {};
       golfLogs.forEach(log => { clubCounts[log.club] = (clubCounts[log.club] || 0) + 1; });
       let clubHtml = "";
@@ -447,6 +469,7 @@
         const div = document.createElement('div');
         div.className = 'record-card';
         div.innerHTML = `
+          <button class="btn-delete" onclick="deleteRecord(${r.timestamp}, 'vr')">🗑️</button>
           <div class="record-date">${r.date}</div>
           <div class="record-title">Hole ${r.hole} (Par ${r.par}) ｜ スコア: ${r.score} <span class="tag" style="background:#e74c3c; color:white;">${r.result}</span></div>
           <div style="margin-top: 5px; font-size: 0.9em;">パット数: <strong>${r.putts}</strong></div>
