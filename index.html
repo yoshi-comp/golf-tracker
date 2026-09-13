@@ -65,7 +65,6 @@
   .vr-hole-info { background: #2980b9; color: white; padding: 15px; border-radius: 8px; margin-bottom: 15px; }
   .vr-hole-title { font-size: 1.1em; font-weight: bold; display: flex; justify-content: space-between; margin-bottom: 5px; }
   
-  /* サブモード切り替えボタン */
   .mode-switch { display: flex; gap: 8px; margin-bottom: 12px; }
   .mode-btn { flex: 1; padding: 8px; font-size: 13px; font-weight: bold; border: 1px solid #bdc3c7; background: #fff; border-radius: 6px; cursor: pointer; color: #555; }
   .mode-btn.active { background: #34495e; color: #fff; border-color: #34495e; }
@@ -87,7 +86,6 @@
   <!-- 📝 ショット記録タブ -->
   <div id="section-input" class="section active">
     
-    <!-- 1打記録 vs 連続打ちまとめ記録 切り替え -->
     <div class="mode-switch">
       <button class="mode-btn active" id="btnModeSingle" onclick="switchShotMode('single')">🎯 1打ずつ記録</button>
       <button class="mode-btn" id="btnModeBatch" onclick="switchShotMode('batch')">⚡️ 連続打ちをまとめて記録</button>
@@ -99,18 +97,19 @@
       <div class="form-row">
         <div class="form-group"><label>クラブ:</label>
           <select id="club">
+            <option value="PW (Qi)">PW (Qi)</option>
             <option value="56度 (DJ-6)">56度 (DJ-6)</option>
             <option value="50度 (DJ-6)">50度 (DJ-6)</option>
-            <option value="PW (Qi)">PW (Qi)</option>
             <option value="8I (Qi)">8I (Qi)</option>
             <option value="5U (Stealth2)">5U (Stealth2)</option>
             <option value="1W">1W</option>
           </select>
         </div>
-        <div class="form-group"><label>キャリー(y):</label><input type="number" id="yardage" placeholder="例: 40" inputmode="numeric"></div>
+        <div class="form-group"><label>キャリー(y):</label><input type="number" id="yardage" placeholder="例: 10" inputmode="numeric"></div>
       </div>
       <div class="form-group"><label>振り幅・打ち方:</label>
         <select id="swing">
+          <option value="転がすアプローチ(ランニング)">転がすアプローチ(ランニング)</option>
           <option value="8時-4時">8時-4時</option>
           <option value="9時-3時">9時-3時</option>
           <option value="ハーフスイング">ハーフスイング</option>
@@ -128,7 +127,7 @@
         <div class="form-group"><label>方向:</label><select id="direction"><option value="ストレート">ストレート</option><option value="右ミス">右ミス</option><option value="左ミス">左ミス</option></select></div>
       </div>
       <label class="checkbox-wrapper"><input type="checkbox" id="isSuccess"><span>🎯 狙い通りに打てた (成功)</span></label>
-      <div class="form-group"><label>メモ:</label><input type="text" id="memo" placeholder="気づきなど"></div>
+      <div class="form-group"><label>メモ:</label><input type="text" id="memo" placeholder="例: キャリー5y・トータル15yなど"></div>
       <button type="submit" class="btn-save">1打を記録</button>
     </form>
 
@@ -138,9 +137,9 @@
       <div class="form-row">
         <div class="form-group"><label>クラブ:</label>
           <select id="batchClub">
+            <option value="PW (Qi)">PW (Qi)</option>
             <option value="56度 (DJ-6)">56度 (DJ-6)</option>
             <option value="50度 (DJ-6)">50度 (DJ-6)</option>
-            <option value="PW (Qi)">PW (Qi)</option>
             <option value="8I (Qi)">8I (Qi)</option>
             <option value="5U (Stealth2)">5U (Stealth2)</option>
             <option value="1W">1W</option>
@@ -148,6 +147,7 @@
         </div>
         <div class="form-group"><label>振り幅・打ち方:</label>
           <select id="batchSwing">
+            <option value="転がすアプローチ(ランニング)">転がすアプローチ(ランニング)</option>
             <option value="連続打ち">連続打ち</option>
             <option value="8時-4時">8時-4時</option>
             <option value="9時-3時">9時-3時</option>
@@ -156,10 +156,10 @@
         </div>
       </div>
       <div class="form-row">
-        <div class="form-group"><label>打った総球数:</label><input type="number" id="batchTotalCount" placeholder="例: 20" inputmode="numeric" required></div>
-        <div class="form-group"><label>ナイスショット数:</label><input type="number" id="batchSuccessCount" placeholder="例: 15" inputmode="numeric" required></div>
+        <div class="form-group"><label>打った総球数:</label><input type="number" id="batchTotalCount" placeholder="例: 15" inputmode="numeric" required></div>
+        <div class="form-group"><label>ナイスショット数:</label><input type="number" id="batchSuccessCount" placeholder="例: 12" inputmode="numeric" required></div>
       </div>
-      <div class="form-group"><label>メモ:</label><input type="text" id="batchMemo" placeholder="例: 当て感をつかむウォーミングアップ"></div>
+      <div class="form-group"><label>メモ:</label><input type="text" id="batchMemo" placeholder="例: 10y落としの転がし確認"></div>
       <button type="submit" class="btn-batch">連続打ちをまとめて保存</button>
     </form>
 
@@ -225,31 +225,46 @@
 
   <!-- 📖 コツ・要点タブ -->
   <div id="section-guide" class="section">
+    <!-- 転がすアプローチ (NEW) -->
+    <div class="guide-card" style="border-left-color: #e67e22;">
+      <div class="guide-header" style="color: #d35400;">⛳️ 転がすアプローチ (PW Qi)</div>
+      <div class="guide-item">
+        <strong>【役割】</strong> グリーン周り（20y以内）でパターが使えない場面の最優先選択。平地では56度を封印しPWを使う。<br>
+        <strong>【ボール位置】</strong> 右足つま先の前（右足寄り）。<br>
+        <strong>【スタンス・体重】</strong> 足幅は靴1足分。左足に7割固定（スイング中も絶対に戻さない）。<br>
+        <strong>【打ち方】</strong> 短く握り、パターと同じ振り子ストローク。手首を完全ロックし、ボールを上げようとせず横から弾く。<br>
+        <strong>【距離比率】</strong> キャリー1 ： ラン2〜3（例：5y落とせばトータル15y転がる）。
+      </div>
+    </div>
+
     <div class="guide-card">
       <div class="guide-header">⛳️ ウェッジ (50度 / 56度 DJ-6)</div>
       <div class="guide-item">
         <strong>【ボール位置】</strong> スタンス中央〜ボール半個右足寄り。<br>
         <strong>【体重配分】</strong> 左足6〜7割に固定（バックスイング中もキープ）。<br>
         <strong>【打ち方】</strong> ハンドファーストに構え、手首をロック。すくい上げず、バンスを地面に滑らせて「低く出してスピンで止める」。左右対称の振り幅（8時-4時 / 9時-3時）を徹底。<br>
-        <strong>【連続打ちの活用】</strong> 当て感をつかむウォーミングアップとして8時/9時の連続打ちは非常に効果的。
+        <strong>【深いラフ】</strong> 芝に埋まっている場合はPWではなく50度/56度の重みとバンスで脱出する。
       </div>
     </div>
+
     <div class="guide-card">
       <div class="guide-header">🏌️‍♂️ アイアン (8I / PW Qi)</div>
       <div class="guide-item">
         <strong>【ボール位置】</strong> スタンス中央。<br>
         <strong>【最下点管理】</strong> ボールの1cm先のマットを軽く擦るイメージ（ダウンブロー）。<br>
-        <strong>【打ち方】</strong> 振りかぶりすぎず、コンパクトなスリークォーター（7割）を徹底。「素振り2回→1球打つ」ルーティンでミート率を最優先。
+        <strong>【打ち方】</strong> 振りかぶりすぎず、コンパクトなスリークォーター（7割）を徹底。横ブレ（スエー）を防ぐためスタンスはやや狭めに。
       </div>
     </div>
+
     <div class="guide-card">
       <div class="guide-header">🚀 ユーティリティ (5U Stealth2)</div>
       <div class="guide-item">
         <strong>【ボール位置】</strong> 中央からボール1個分左足寄り。<br>
-        <strong>【体重配分】</strong> 左右50：50均等。<br>
+        <strong>【構え・体重】</strong> 左右50：50均等。ハンドファーストは極小（ほぼストレート）。<br>
         <strong>【打ち方】</strong> 上から打ち込まず、横から「ほうきで床を掃く」ように低く長く払い打つ。重いスチールシャフト（KBS）に任せ、力まず背中の回転でゆったり振る。
       </div>
     </div>
+
     <div class="guide-card">
       <div class="guide-header">💣 ドライバー (1W / 60Sシャフト)</div>
       <div class="guide-item">
@@ -290,7 +305,7 @@
       { hole: 2, par: 4, dist: 350, desc: "【打ち上げ】距離感が狂いやすい。セカンドは大きめのクラブ(5U)でコンパクトに。" },
       { hole: 3, par: 3, dist: 140, desc: "【谷越えショート】力みによるダフリ注意。8Iの7割スイングで確実に谷を越える。" },
       { hole: 4, par: 5, dist: 490, desc: "【左ドッグレッグ】ショートカットは狙わず、フェアウェイ右サイドへ。3打目勝負。" },
-      { hole: 5, par: 4, dist: 360, desc: "【砲台グリーン】グリーン周りのアプローチが鍵。DJ-6の『9時-3時』で手前から転がす。" },
+      { hole: 5, par: 4, dist: 360, desc: "【砲台グリーン】グリーン周りのアプローチが鍵。PWの転がしアプローチで安全に乗せる。" },
       { hole: 6, par: 4, dist: 390, desc: "【距離の長いPar4】無理にパーを狙わない。3オン2パットの『ボギー』で大正解のホール。" },
       { hole: 7, par: 3, dist: 160, desc: "【やや打ち下ろし】風の影響を受けやすい。5Uで軽く払い打ち、グリーン手前の花道狙い。" },
       { hole: 8, par: 5, dist: 510, desc: "【S字レイアウト】2打目の方向性が重要。5Uで確実に見える位置へレイアップする。" },
@@ -300,10 +315,10 @@
       { hole: 12, par: 3, dist: 130, desc: "【池越えショート】8Iのフルスイングではなく、リラックスした7割スイングでミート重視。" },
       { hole: 13, par: 4, dist: 400, desc: "【最難関Par4】距離が長くタフ。最初から5オン(ダブルボギー)設定で気楽に攻める。" },
       { hole: 14, par: 4, dist: 340, desc: "【右ドッグレッグ】右へのミスは即OB。ティーショットは左サイド狙いを徹底。" },
-      { hole: 15, par: 4, dist: 350, desc: "【フラットなホール】スコアメイクのチャンス。DJ-6の距離感データを信じて寄せる。" },
+      { hole: 15, par: 4, dist: 350, desc: "【フラットなホール】スコアメイクのチャンス。手前からPWで転がして寄せる。" },
       { hole: 16, par: 3, dist: 150, desc: "【打ち上げショート】グリーン面が見えない。キャリーがしっかり出る5Uで高い球を打つ。" },
       { hole: 17, par: 5, dist: 500, desc: "【ブラインドホール】先が見えないため、刻む勇気が必要。アイアンでフェアウェイを繋ぐ。" },
-      { hole: 18, par: 4, dist: 380, desc: "【池が絡む最終ホール】池の手前に刻むか越えるか。手前に刻み、DJ-6で確実に3オン狙い。" }
+      { hole: 18, par: 4, dist: 380, desc: "【池が絡む最終ホール】池の手前に刻むか越えるか。手前に刻み、PWまたはDJ-6で確実に3オン狙い。" }
     ];
 
     function initApp() {
@@ -334,7 +349,6 @@
       if(tabName === 'vr') { updateVRHole(); renderVRRecords(); }
     }
 
-    // 1打記録と連続打ち記録のサブ切り替え
     function switchShotMode(mode) {
       if (mode === 'single') {
         document.getElementById('btnModeSingle').classList.add('active');
@@ -504,8 +518,9 @@
         menuHtml = `
           <strong>【練習場 DAY 1：距離感と最下点管理】（約70分/70球）</strong><br>
           1. <strong>DJ-6 (50度/56度)</strong>：8時/9時のキャリー計測（各15球・計30球）。左足体重キープ。<br>
-          2. <strong>PW・8I</strong>：ボールの1cm先を擦るスリークォーターショット（20球）。<br>
-          3. <strong>5U</strong>：低いティーアップで払い打ち（20球）。<br>
+          2. <strong>PW 転がすアプローチ</strong>：10〜15y先の目印へ落として転がす練習（15球）。<br>
+          3. <strong>PW・8I</strong>：ボールの1cm先を擦るスリークォーターショット（15球）。<br>
+          4. <strong>5U</strong>：低いティーアップで払い打ち（10球）。<br>
           ※打つたびに後ろへ下がり、アプリに記録しましょう。
         `;
       } else if (dayOfWeek === 6 || dayOfWeek === 0) {
@@ -513,7 +528,7 @@
           <strong>【練習場 DAY 2：実戦・仮想ラウンド】（約70分/70球）</strong><br>
           1. <strong>1W (ドライバー)</strong>：右足引きドリル5球＋ゆったり7割スイング10球。<br>
           2. <strong>5U 直打ち</strong>：マットから170y先を狙う（15球）。<br>
-          3. <strong>仮想ラウンド（宇治田原CC）</strong>：仮想タブのホールを見ながら、1W→5U→DJ-6と1球ごとにクラブを持ち替えて打つ（30球）。
+          3. <strong>仮想ラウンド（宇治田原CC）</strong>：仮想タブのホールを見ながら、1W→5U→PW(転がし)またはDJ-6と1球ごとにクラブを持ち替えて打つ（30球）。
         `;
       } else {
         menuHtml = `
@@ -525,7 +540,6 @@
       }
       document.getElementById('todayMenuContent').innerHTML = menuHtml;
 
-      // 打球数の集計（単発・まとめ打ち両方を合算）
       const golfLogs = JSON.parse(localStorage.getItem('golfLogs')) || [];
       const putterLogs = JSON.parse(localStorage.getItem('putterLogs')) || [];
       
